@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f0f0f0;
+      }
+      #chat {
+        width: 500px;
+        background: white;
+        padding: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+      }
+      #messages {
+        height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-bottom: 10px;
+        border-radius: 4px;
+        background-color: #fafafa;
+      }
+      #messages div {
+        margin-bottom: 10px;
+      }
+      #usernameInput,
+      #messageInput {
+        width: calc(100% - 22px);
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      #sendButton {
+        width: 100%;
+        padding: 10px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      #sendButton:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="chat">
+      <div id="messages"></div>
+      <input type="text" id="usernameInput" placeholder="Enter your username" />
+      <input type="text" id="messageInput" placeholder="Type a message..." />
+      <button id="sendButton">Send</button>
+    </div>
+    <script>
+      const socket = new WebSocket("ws://192.168.1.105:3000/ws");
+
+      socket.onopen = function (event) {
+        console.log("WebSocket is connected.");
+      };
+
+      socket.onmessage = function (event) {
+        const messagesDiv = document.getElementById("messages");
+        const messageData = JSON.parse(event.data);
+        const message = document.createElement("div");
+        message.textContent = `${messageData.username}: ${messageData.content}`;
+        messagesDiv.appendChild(message);
+      };
+
+      socket.onclose = function (event) {
+        console.log("WebSocket is closed.");
+      };
+
+      socket.onerror = function (error) {
+        console.log("WebSocket Error:", error);
+      };
+
+      document.getElementById("sendButton").onclick = function () {
+        const usernameInput = document.getElementById("usernameInput");
+        const messageInput = document.getElementById("messageInput");
+        const message = {
+          username: usernameInput.value,
+          content: messageInput.value,
+        };
+        socket.send(JSON.stringify(message));
+        messageInput.value = "";
+      };
+
+      document
+        .getElementById("messageInput")
+        .addEventListener("keyup", function (event) {
+          if (event.key === "Enter") {
+            document.getElementById("sendButton").click();
+          }
+        });
+    </script>
+  </body>
+</html>
